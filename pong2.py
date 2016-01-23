@@ -43,12 +43,14 @@ class GameCircle(GameObject):
     pass
 
 class GameShoot(GameCircle):
+    SPRITE = pygame.image.load('resources/shoot.png')
     def __init__(self, *args, **kwargs):
         GameCircle.__init__(self,*args,**kwargs)
         self.life = 3
         
     def draw(self, screen):
-        pygame.draw.circle(screen, (100,200,255), (int(self.x),int(self.y)) , 2)
+        #pygame.draw.circle(screen, (100,200,255), (int(self.x),int(self.y)) , 2)
+        screen.blit(self.SPRITE,(int(self.x-4),int(self.y-4)))
     def logic(self, new_time):
         GameCircle.logic(self,new_time)
         self.life -= self.dtime
@@ -69,8 +71,10 @@ class GameShoot(GameCircle):
                 
 
 class GamePlayer(GameCircle):
+    SPRITE = pygame.image.load('resources/ball2.png')
     def draw(self, screen):
-        pygame.draw.circle(screen, (100,255,100), (int(self.x),int(self.y)) , 8)
+        #pygame.draw.circle(screen, (100,255,100), (int(self.x),int(self.y)) , 8)
+        screen.blit(self.SPRITE,(int(self.x-12),int(self.y-12)))
 
     def logic(self, new_time):
         GameCircle.logic(self,new_time)
@@ -91,8 +95,10 @@ class GamePlayer(GameCircle):
         # super(GamePlayer, self).logic(new_time)
 
 class GameAsteroid(GameCircle):
+    SPRITE = pygame.image.load('resources/ball1.png')
     def draw(self, screen):
-        pygame.draw.circle(screen, (255,100,100), (int(self.x),int(self.y)) , 16)
+        #pygame.draw.circle(screen, (255,100,100), (int(self.x),int(self.y)) , 16)
+        screen.blit(self.SPRITE,(int(self.x-16),int(self.y-16)))
 
     def logic(self, new_time):
         GameCircle.logic(self,new_time)
