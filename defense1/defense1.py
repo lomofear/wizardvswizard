@@ -86,19 +86,59 @@ class GamePath(GameObject):
         
     def draw(self, screen):
         x,y = int(self.x),int(self.y)
-        Rect = x-16,y-16,32,32
+        Rect = x-15,y-15,32,32
         pygame.draw.rect(screen, (100,100,120), Rect)
         pygame.draw.rect(screen, (0,0,20), Rect, 1)
-        Rect = x-14,y-14,28,28
+        Rect = x-13,y-13,28,28
         # Coloreo incremental para facilitar el seguir el camino visualmente:
         # ... a veces produce colores feos, lo sé.
-        pygame.draw.rect(screen, (int(120+math.sin(self.num/125.0)*100),
-                                  int(120+math.sin(self.num/25.0)*100),
-                                  int(120+math.sin(self.num/5.0)*100)), Rect)
+        pygame.draw.rect(screen, (int(120+math.sin(self.num/23.0)*100),
+                                  int(120+math.sin(self.num/11.0)*100),
+                                  int(120+math.sin(self.num/4.0)*100)), Rect)
 
+class GameEnemy(GameObject):
+    def __init__(self, *args, **kwargs):
+        GameObject.__init__(self,*args,**kwargs)
+        self.posnum = 0
+        self.x = GamePath.PATH[self.posnum].x + random.randint(-12,12)
+        self.y = GamePath.PATH[self.posnum].y + random.randint(-12,12)
+        self.posnum += 1
+
+    def draw(self, screen):
+        pygame.draw.circle(screen, (200,80,80), (int(self.x),int(self.y)) , 8)
+        pygame.draw.circle(screen, (20,0,0), (int(self.x),int(self.y)) , 9, 1)
+        pygame.draw.circle(screen, (255,100,100), (int(self.x),int(self.y)) , 8, 1)
+
+    def logic(self, new_time):
+        GameObject.logic(self,new_time)
+        if self.posnum not in GamePath.PATH:
+            return
+        dstx,dsty = GamePath.PATH[self.posnum].x,GamePath.PATH[self.posnum].y
+        dx, dy = dstx - self.x , dsty - self.y
+        dst = math.hypot(dx,dy)
+        ndx , ndy = dx / dst, dy / dst
+        self.dx += ndx * self.dtime * 60.0
+        self.dy += ndy * self.dtime * 60.0
         
+        self.dx /= 1.5 ** self.dtime
+        self.dy /= 1.5 ** self.dtime
         
-        
+        if dst < 16: self.posnum += 1
+        dstx,dsty = GamePath.PATH[self.posnum-1].x,GamePath.PATH[self.posnum-1].y
+        dx2, dy2 = dstx - self.x , dsty - self.y
+        dx2 += dx
+        dy2 += dy
+        dst2 = abs(dx2) + abs(dy2)
+        ndx2 , ndy2 = dx2 / dst2, dy2 / dst2
+        if dst2 > 20:
+            if abs(ndx2) > 0.3:
+                self.x += ndx2 / 2
+                if math.copysign(1,ndx2) != math.copysign(1,self.dx):
+                    self.dx *= -0.6
+            if abs(ndy2) > 0.3:
+                self.y += ndy2 / 2
+                if math.copysign(1,ndy2) != math.copysign(1,self.dy):
+                    self.dy *= -0.6
 
 # Creo una clase para llevar todo el juego
 # ... esta estrategia es un poco al estilo Java (si, en serio, java)
@@ -124,6 +164,7 @@ class TowerGame(object):
         self.done = False
         self.logic_callbacks = []
         self.draw_callbacks = []
+        self.last_enemy = 0
         
     def setup(self):
         """
@@ -142,6 +183,7 @@ class TowerGame(object):
         self.logic_callbacks.append(GameObject.apply_logic_to_all)
         self.draw_callbacks[:] = []
         self.draw_callbacks.append(GameObject.draw_all)
+        self.last_enemy = self.frametime
         
     def main_loop(self):
         """
@@ -179,6 +221,11 @@ class TowerGame(object):
         """
         for callback in self.logic_callbacks:
             callback(self.frametime)
+
+        if self.frametime - self.last_enemy > 2:
+            self.last_enemy = self.frametime
+            GameEnemy(self.frametime)
+            
           
     def draw_frame(self):
         """ Sistema de dibujo por callbacks.
