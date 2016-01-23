@@ -22,8 +22,14 @@ x = 0
 y = 0
 dx, dy = 1,1
 x2,y2 = -50, -50
+shoot = False
+s_x = 0
+s_y = 0
+s_dx = s_dy = 0
+s_life = 0
 
 while done == False:
+    shoot = False
     # write event handlers here
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -38,6 +44,7 @@ while done == False:
                 done = True
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == MB_LEFT:
             print "You pressed the left mouse button at (%d, %d)" % event.pos
+            shoot = True
         if event.type == pygame.MOUSEBUTTONUP and event.button == MB_LEFT:
             print "You released the left mouse button at (%d, %d)" % event.pos        #if event.type == pygame.KEYDOWN:
         #    if event.key == pygame.K_UP:    dy -= 1
@@ -60,7 +67,23 @@ while done == False:
     dx /= 1.01
     dy /= 1.01
     dy += 0.06
+    if shoot:
+        s_x = x
+        s_y = y
+        dist = math.hypot(dx,dy)
+        if dist > 0:
+            n_dx = dx / dist 
+            n_dy = dy / dist
+            vel = 10
+            s_dx = n_dx * vel
+            s_dy = n_dy * vel
+            s_life = 100
 
+    s_dx /= 1.01
+    s_dy /= 1.01
+    s_dy += 0.06
+    s_x += s_dx
+    s_y += s_dy
     dx2, dy2 = x-x2, y-y2
     dist = math.hypot(dx2,dy2)
     if dist < 50:
@@ -78,7 +101,9 @@ while done == False:
     # write draw code here
     pygame.draw.circle(screen, (0,255,0), (int(x),int(y)) , 9)
     pygame.draw.circle(screen, (200,200,200), (int(x),int(y)) , 7)
-
+    if s_life > 0:
+       pygame.draw.circle(screen, (0,200,255), (int(s_x),int(s_y)) , 3)
+         
     # display whats drawn. this might change.
     pygame.display.update()
     # run at 30 fps
