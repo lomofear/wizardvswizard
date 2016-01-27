@@ -43,7 +43,7 @@ class GameObject(object):
 
     @classmethod
     def draw_all(cls, screen):
-        for gameobject in cls.OBJECT_LIST:
+        for gameobject in sorted(cls.OBJECT_LIST, key=lambda obj: -obj.z):
             gameobject.draw(screen)
     
     # INSTANCIAS
@@ -52,8 +52,10 @@ class GameObject(object):
         self.dtime = 0
         self.x = x
         self.y = y 
+        self.z = 50
         self.dx = dx
         self.dy = dy
+        self.last_mouseover = 0
         self.OBJECT_LIST.append(self)
 
     def logic(self, new_time):
@@ -79,6 +81,7 @@ class GamePath(GameObject):
             y = py*32 + 16
             kwargs['x'] = x
             kwargs['y'] = y
+        self.z = 75
         self.num = num
         self.pos = pos
         self.PATH[num] = self # autoregistro. 
@@ -160,11 +163,64 @@ def coeff_correlacion_vectores(x1,y1,x2,y2):
     #     1 - 2.0 = -1.0
     
     return coeff
+
+class GameCursor(GameObject):
+    def __init__(self, *args, **kwargs):
+        GameObject.__init__(self,*args,**kwargs)
+        self.z = 0  # dibujar arriba
+        self.px = 0
+        self.py = 0
+    def draw(self, screen):
+        x,y = int(self.x),int(self.y)
+        Rect = x-15,y-15,32,32
+        pygame.draw.rect(screen, (255,255,255), Rect, 1)
+def GetAngleOfLineBetweenTwoPoints(p1, p2): 
+    xDiff = p2.x - p1.x 
+    yDiff = p2.y - p1.y 
+    return math.atan2(yDiff, xDiff)
+
+class GameTower(GameObject):
+    def __init__(self, *args, **kwargs):
+        GameObject.__init__(self,*args,**kwargs)
+        self.z = 10  
+        self.px = 0
+        self.py = 0
+        self.range = 64
+        self.angle = random.uniform(-12,12)
+        self.last_mouseover = 0
+
+    def draw(self, screen):
+        x,y = int(self.x),int(self.y)
+        Rect = x-15,y-15,32,32
+        pygame.draw.rect(screen, (80,100,120), Rect)
+        pygame.draw.rect(screen, (150,165,165), Rect, 1)
+        pygame.draw.circle(screen, (10,80,100), (x,y), 13, 0)
+        pygame.draw.circle(screen, (100,120,150), (x,y), 13, 1)
+        if self.time - self.last_mouseover < 0.5:
+            pygame.draw.circle(screen, (200,0,0), (x,y), self.range, 1)
+        
+        ax = int(x + math.cos(self.angle)*10)
+        ay = int(y + math.sin(self.angle)*10)
+        pygame.draw.circle(screen, (160,200,220), (ax,ay), 3, 1)
+
+    def logic(self, new_time):
+        GameObject.logic(self,new_time)
+        
+        for gameobject in self.OBJECT_LIST:
+            if gameobject is self: continue
+            if not isinstance(gameobject, GameEnemy): continue
+            dist = math.hypot(self.x-gameobject.x, self.y-gameobject.y)
+            if dist > self.range: continue
+            new_ang = GetAngleOfLineBetweenTwoPoints(self, gameobject)
+            self.angle = new_ang
+            break
+        
     
 
 class GameEnemy(GameObject):
     def __init__(self, *args, **kwargs):
         GameObject.__init__(self,*args,**kwargs)
+        self.z = 25
         self.posnum = 0
         self.x = GamePath.PATH[self.posnum].x + random.randint(-12,12)
         self.y = GamePath.PATH[self.posnum].y + random.randint(-12,12)
@@ -243,6 +299,7 @@ class TowerGame(object):
         self.logic_callbacks = []
         self.draw_callbacks = []
         self.last_enemy = 0
+        self.cursor = None
         
     def setup(self):
         """
@@ -262,6 +319,7 @@ class TowerGame(object):
         self.draw_callbacks[:] = []
         self.draw_callbacks.append(GameObject.draw_all)
         self.last_enemy = self.frametime
+        self.cursor = GameCursor(self.frametime)
         
     def main_loop(self):
         """
@@ -319,10 +377,36 @@ class TowerGame(object):
     
     def on_mousemotion(self, event):
         mouse_x, mouse_y = event.pos
+        px,py = mouse_x / 32 , mouse_y/32
+        x = px*32 + 16
+        y = py*32 + 16
+        
+        self.cursor.x = x
+        self.cursor.y = y
+        self.cursor.px = x
+        self.cursor.py = y
+        for gameobject in GameObject.OBJECT_LIST:
+            dist = math.hypot(x-gameobject.x, y-gameobject.y)
+            if dist > 16: continue
+            gameobject.last_mouseover = self.frametime
+        
         #print "mouse at (%d, %d)" % (mouse_x,mouse_y)
         
     def on_mouse_button_left(self, event):
         mouse_x, mouse_y = event.pos
+        px,py = mouse_x / 32 , mouse_y/32
+        x = px*32 + 16
+        y = py*32 + 16
+        
+        self.cursor.x = x
+        self.cursor.y = y
+        self.cursor.px = px
+        self.cursor.py = py
+        tower = GameTower(self.frametime)
+        tower.x = x
+        tower.y = y
+        tower.px = px
+        tower.py = py
 
     def on_mouse_button_right(self, event):
         mouse_x, mouse_y = event.pos
