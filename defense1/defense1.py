@@ -47,8 +47,9 @@ class GameObject(object):
             gameobject.draw(screen)
     
     # INSTANCIAS
-    def __init__(self, new_time, x = 0, y = 0, dx = 0, dy = 0):
-        self.time = new_time
+    def __init__(self, game, x = 0, y = 0, dx = 0, dy = 0):
+        self.game = game
+        self.time = self.game.frametime
         self.dtime = 0
         self.x = x
         self.y = y 
@@ -65,14 +66,20 @@ class GameObject(object):
 
         self.x += self.dx * self.dtime
         self.y += self.dy * self.dtime
+    def destruct(self):
+        try:
+            self.OBJECT_LIST.remove(self)
+        except ValueError:
+            pass # Intento de borrar un elemento ya borrado.
         
     def draw(self, screen):
         pygame.draw.circle(screen, (200,200,200), (int(self.x),int(self.y)) , 3)
     
 class GamePath(GameObject):
     PATH = {}
-    def __init__(self, pos, num, *args, **kwargs):
-        #pos = kwargs.pop('pos', None)
+    def __init__(self, *args, **kwargs):
+        pos = kwargs.pop('pos', None)
+        num = kwargs.pop('num', None)
         if pos:
             # Si nos pasan un param. llamado "pos" lo robamos y lo usamos
             # como pareja x,y del tablero. Lo traducimos a x,y.
@@ -174,10 +181,18 @@ class GameCursor(GameObject):
         x,y = int(self.x),int(self.y)
         Rect = x-15,y-15,32,32
         pygame.draw.rect(screen, (255,255,255), Rect, 1)
-def GetAngleOfLineBetweenTwoPoints(p1, p2): 
-    xDiff = p2.x - p1.x 
-    yDiff = p2.y - p1.y 
+def GetAngleOfLineBetweenTwoPoints(p1, p2,time_shift_p2=0): 
+    p2x = p2.x + p2.dx * time_shift_p2
+    p2y = p2.y + p2.dy * time_shift_p2
+    xDiff = p2x - p1.x 
+    yDiff = p2y - p1.y 
     return math.atan2(yDiff, xDiff)
+
+def GetDistanceBetweenTwoPints(p1,p2, minimum_distance=0.000001):
+    dist = math.hypot(p1.x-p2.x, p1.y-p2.y)
+    if dist < minimum_distance: return minimum_distance # avoid divide by zero
+    return dist
+
 
 class GameTower(GameObject):
     def __init__(self, *args, **kwargs):
@@ -185,9 +200,10 @@ class GameTower(GameObject):
         self.z = 10  
         self.px = 0
         self.py = 0
-        self.range = 64
+        self.range = 150
         self.angle = random.uniform(-12,12)
         self.last_mouseover = 0
+        self.last_shot = 0
 
     def draw(self, screen):
         x,y = int(self.x),int(self.y)
@@ -196,6 +212,9 @@ class GameTower(GameObject):
         pygame.draw.rect(screen, (150,165,165), Rect, 1)
         pygame.draw.circle(screen, (10,80,100), (x,y), 13, 0)
         pygame.draw.circle(screen, (100,120,150), (x,y), 13, 1)
+        if self.game.cursor.px == self.px and self.game.cursor.py == self.py:
+            self.last_mouseover = self.time
+            
         if self.time - self.last_mouseover < 0.5:
             pygame.draw.circle(screen, (200,0,0), (x,y), self.range, 1)
         
@@ -211,11 +230,66 @@ class GameTower(GameObject):
             if not isinstance(gameobject, GameEnemy): continue
             dist = math.hypot(self.x-gameobject.x, self.y-gameobject.y)
             if dist > self.range: continue
-            new_ang = GetAngleOfLineBetweenTwoPoints(self, gameobject)
+            
+            new_ang = GetAngleOfLineBetweenTwoPoints(self, gameobject, time_shift_p2=dist/300.0)
             self.angle = new_ang
+            if self.time - self.last_shot > 0.05: 
+                self.last_shot = self.time
+                shot_angle = self.angle + random.uniform(-0.1,0.1)
+                shot = GameShot(self.game, target = gameobject, parent = self, angle = shot_angle)
             break
         
-    
+class GameShot(GameObject):
+    def __init__(self, *args, **kwargs):
+        self.target = kwargs.pop('target', None)
+        self.parent = kwargs.pop('parent', None)
+        self.angle = kwargs.pop('angle', -1)
+        self.speed = kwargs.pop('speed', 300)
+        self.maxflytime = kwargs.pop('maxflytime', 0.5)
+        GameObject.__init__(self,*args,**kwargs)
+        self.z = -1
+        self.flytime = 0
+        self.damage = 1
+        
+        if self.parent:
+            self.x = self.parent.x
+            self.y = self.parent.y
+            if self.angle == -1:
+                self.angle = getattr(self.parent , "angle", -1)
+                
+            
+    def logic(self, new_time):
+        GameObject.logic(self,new_time)
+        if self.flytime == 0:
+            ax, ay = math.cos(self.angle), math.sin(self.angle)
+            self.dx = ax * self.speed
+            self.dy = ay * self.speed
+
+        #if self.target:
+        #    self.angle = GetAngleOfLineBetweenTwoPoints(self, self.target)
+        ax, ay = math.cos(self.angle), math.sin(self.angle)
+        mass = 5.0
+        self.dx = (self.dx * mass + ax * self.speed * self.dtime) / (mass + self.dtime)
+        self.dy = (self.dy * mass + ay * self.speed * self.dtime) / (mass + self.dtime)
+        current_speed = math.hypot(self.dx, self.dy)
+        if current_speed < self.speed * 0.60:
+            self.destruct()
+            
+        if GetDistanceBetweenTwoPints(self, self.target) < 8:
+            self.destruct()
+            self.target.receive_damage(self.damage)
+            
+        if self.flytime == 0:
+            # First frame!
+            self.x += ax * 8
+            self.y += ay * 8
+        self.flytime += self.dtime
+        if self.flytime > self.maxflytime:
+            self.destruct()
+
+    def draw(self, screen):
+        pygame.draw.circle(screen, (255,255,random.randint(1,250)), (int(self.x),int(self.y)) , 2)
+            
 
 class GameEnemy(GameObject):
     def __init__(self, *args, **kwargs):
@@ -228,11 +302,17 @@ class GameEnemy(GameObject):
         self.velocity = 200
         self.minvelocity = 20
         self.maxvelocity = 200
+        self.life = 70
 
     def draw(self, screen):
         pygame.draw.circle(screen, (200,80,80), (int(self.x),int(self.y)) , 8)
         pygame.draw.circle(screen, (20,0,0), (int(self.x),int(self.y)) , 9, 1)
         pygame.draw.circle(screen, (255,100,100), (int(self.x),int(self.y)) , 8, 1)
+    
+    def receive_damage(self, damage):
+        self.life -= damage
+        if self.life <= 0:
+            self.destruct()
 
     def logic(self, new_time):
         GameObject.logic(self,new_time)
@@ -299,6 +379,7 @@ class TowerGame(object):
         self.logic_callbacks = []
         self.draw_callbacks = []
         self.last_enemy = 0
+        self.enemy_n = 0
         self.cursor = None
         
     def setup(self):
@@ -318,8 +399,9 @@ class TowerGame(object):
         self.logic_callbacks.append(GameObject.apply_logic_to_all)
         self.draw_callbacks[:] = []
         self.draw_callbacks.append(GameObject.draw_all)
-        self.last_enemy = self.frametime
-        self.cursor = GameCursor(self.frametime)
+        self.last_enemy = 0
+        self.time_between_enemies = 8
+        self.cursor = GameCursor(self)
         
     def main_loop(self):
         """
@@ -358,9 +440,11 @@ class TowerGame(object):
         for callback in self.logic_callbacks:
             callback(self.frametime)
 
-        if self.frametime - self.last_enemy > 2:
+        if self.frametime - self.last_enemy > self.time_between_enemies:
             self.last_enemy = self.frametime
-            GameEnemy(self.frametime)
+            self.enemy_n += 1
+            self.time_between_enemies /= 1 + 0.50 / self.enemy_n
+            GameEnemy(self)
             
           
     def draw_frame(self):
@@ -383,13 +467,13 @@ class TowerGame(object):
         
         self.cursor.x = x
         self.cursor.y = y
-        self.cursor.px = x
-        self.cursor.py = y
-        for gameobject in GameObject.OBJECT_LIST:
+        self.cursor.px = px
+        self.cursor.py = py
+        """for gameobject in GameObject.OBJECT_LIST:
             dist = math.hypot(x-gameobject.x, y-gameobject.y)
             if dist > 16: continue
             gameobject.last_mouseover = self.frametime
-        
+        """
         #print "mouse at (%d, %d)" % (mouse_x,mouse_y)
         
     def on_mouse_button_left(self, event):
@@ -402,7 +486,7 @@ class TowerGame(object):
         self.cursor.y = y
         self.cursor.px = px
         self.cursor.py = py
-        tower = GameTower(self.frametime)
+        tower = GameTower(self)
         tower.x = x
         tower.y = y
         tower.px = px
@@ -447,14 +531,16 @@ def main():
     # Esto es la pantalla: (si, en serio) (Usa WASD como las teclas de moverse con el CStrike)
     path = "ssssdddwwddssssddddwwaawwdddddssddssssaaaaasaaaawaaasaaaa "
     for n,c in enumerate(path):
-        GamePath(new_time = game.frametime, pos=pos, num=n)
+        GamePath(game, pos=pos, num=n)
         if c == 'w': pos = (pos[0],pos[1]-1)
         if c == 'a': pos = (pos[0]-1,pos[1])
         if c == 's': pos = (pos[0],pos[1]+1)
         if c == 'd': pos = (pos[0]+1,pos[1])
     # Loop until the user clicks close button
     game.main_loop()
-
+    del game
+    pygame.quit() 
+    sys.exit(0)
 # Esto es el "truco" de python para evitar que si realizamos un "import defense1.py"
 # no nos ejeucte el main. Es decir, que esto a la vez es un programa y una librería.
 # Esto siempre se queda al final.
