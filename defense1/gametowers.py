@@ -8,19 +8,19 @@ import pygame
 
 from gameutilities import * # <- Eliminar asterisco
 from gameentities import * # <- Eliminar asterisco
+from gameboard import GameBoardBox
 from gameenemies import * 
 from gameshots import *
 
-class GameTower(GameObject):
+class GameTower(GameBoardBox):
     def __init__(self, *args, **kwargs):
-        GameObject.__init__(self,*args,**kwargs)
+        GameBoardBox.__init__(self,*args,**kwargs)
         self.z = 10  
-        self.px = 0
-        self.py = 0
-        self.range = 350
+        self.range = 100
         self.angle = random.uniform(-12,12)
         self.last_mouseover = 0
         self.last_shot = 0
+        self.shot_freq = 2.0
 
     def draw(self, screen):
         x,y = int(self.x),int(self.y)
@@ -41,9 +41,9 @@ class GameTower(GameObject):
         pygame.draw.circle(screen, (160,200,220), (ax,ay), 2, 1)
 
     def logic(self, new_time):
-        GameObject.logic(self,new_time)
+        GameBoardBox.logic(self,new_time)
         targets = []
-        for gameobject in self.OBJECT_LIST:
+        for gameobject in GameObject.OBJECT_LIST:
             if gameobject is self: continue
             if not isinstance(gameobject, GameEnemy): continue
             dist = math.hypot(self.x-gameobject.x, self.y-gameobject.y)
@@ -55,7 +55,7 @@ class GameTower(GameObject):
             dist, gameobject = targets[0]
             new_ang = GetAngleOfLineBetweenTwoPoints(self, gameobject, time_shift_p2=dist/100.0*0.5)
             self.angle = new_ang
-            if self.time - self.last_shot > 0.30 and random.randint(0,2) == 0: 
+            if self.time - self.last_shot > 1.0 / self.shot_freq and random.randint(0,2) == 0: 
                 self.last_shot = self.time
                 shot_angle = self.angle + random.uniform(-0.1,0.1)
                 shot = GameShot(self.game, target = gameobject, parent = self, angle = shot_angle)

@@ -16,7 +16,7 @@ class GameShot(GameObject):
         self.parent = kwargs.pop('parent', None)
         self.angle = kwargs.pop('angle', -1)
         self.speed = kwargs.pop('speed', 100)
-        self.maxflytime = kwargs.pop('maxflytime', 2.5)
+        self.maxflytime = kwargs.pop('maxflytime', 1.0)
         GameObject.__init__(self,*args,**kwargs)
         self.z = -1
         self.flytime = 0

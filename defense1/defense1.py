@@ -55,6 +55,8 @@ class TowerGame(object):
         self.screen = screen
         self.clock = None
         self.frametime = 0 
+        self.max_dtime = 0.1
+        self.last_frametime = 0
         self.game = self # <- esto es un singleton chapucero.
         # Un singleton es un pattern de programación conocido. Busca en google.
         # es como una global con una instancia de la clase.
@@ -65,6 +67,9 @@ class TowerGame(object):
         self.last_enemy = 0
         self.enemy_n = 0
         self.cursor = None
+        self._money = 0
+        self.ui_money = None 
+        self.scr_rect = self.screen.get_rect()
         
     def setup(self):
         """
@@ -75,8 +80,10 @@ class TowerGame(object):
         tener que borrar el objeto entero. 
         """
         # initialize clock. used later in the loop.
+        self.scr_rect = self.screen.get_rect()
         self.clock = pygame.time.Clock()
         self.frametime = time.time()
+        self.last_frametime = time.time()
         self.done = False
         
         self.logic_callbacks[:] = []
@@ -84,10 +91,24 @@ class TowerGame(object):
         self.draw_callbacks[:] = []
         self.draw_callbacks.append(GameObject.draw_all)
         self.last_enemy = 0
-        self.time_between_enemies = 8
+        self.time_between_enemies = 6
         self.cursor = GameCursor(self)
         # dinero al iniciar, 100$
-        
+        self._money = 60
+        self.ui_money = GameText(self)
+        self.ui_money.setText("Money: %d$" % self.money)
+        self.ui_money.setPosition(
+            (self.scr_rect.right, self.scr_rect.top), 
+            ALIGN_RIGHT | ALIGN_TOP)
+    @property
+    def money(self):
+        return self._money
+    @money.setter
+    def money(self, value):
+        self._money = int(value)
+        if self.ui_money:
+            self.ui_money.setText("Money: %d$" % self.money)
+    
     def main_loop(self):
         """
         Método de ayuda para crear un bucle sencillo.
@@ -122,17 +143,28 @@ class TowerGame(object):
         Tiene la ventaja de que otros sistemas se pueden agregar desde fuera
         sin reprogramar.
         """
-        for callback in self.logic_callbacks:
-            callback(self.frametime)
-
+        while self.last_frametime < self.frametime:
+            dtime = self.frametime - self.last_frametime
+            if dtime > self.max_dtime: dtime = self.max_dtime
+            
+            self.last_frametime += dtime
+            for callback in self.logic_callbacks:
+                callback(self.last_frametime)
+        
         if self.frametime - self.last_enemy > self.time_between_enemies:
             self.last_enemy = self.frametime
             self.enemy_n += 1
             time_k = min(1.0,self.time_between_enemies) ** 2.0
-            self.time_between_enemies /= 1 + ((0.50 / self.enemy_n) 
+            self.time_between_enemies /= 1 + ((0.20 / self.enemy_n) 
                                 * time_k)
             GameEnemy(self)
-            
+            if self.enemy_n % 10 == 0:
+                GameEnemy.LIFE += 1
+            if self.enemy_n % 2 == 0:
+                GameEnemy.MAXVEL += 2
+                GameEnemy.MINVEL += 1
+                if GameEnemy.MAXVEL < GameEnemy.MINVEL:
+                    GameEnemy.MAXVEL = GameEnemy.MINVEL
           
     def draw_frame(self):
         """ Sistema de dibujo por callbacks.
@@ -173,11 +205,16 @@ class TowerGame(object):
         self.cursor.y = y
         self.cursor.px = px
         self.cursor.py = py
-        tower = GameTower(self)
-        tower.x = x
-        tower.y = y
-        tower.px = px
-        tower.py = py
+        cost = 25
+        if self.money >= cost:
+            try:
+                tower = GameTower(self, x=x, y=y, px = px, py=py)
+                self.money -= cost
+            except ValueError:
+                print "Posicion de torre no valida"
+        else:
+            print "no hay dinero"
+            
 
     def on_mouse_button_right(self, event):
         mouse_x, mouse_y = event.pos

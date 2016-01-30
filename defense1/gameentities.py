@@ -8,6 +8,7 @@ import random
 
 import pygame
 
+from gameutilities import * # <- Eliminar asterisco
 
 
 
@@ -129,9 +130,9 @@ class GameText(GameEntity):
         if self.font is None:
             self.font = pygame.font.Font(self.fontfamily, self.fontsize)
         if self.text_bmp is None:
-            self.text_bmp = font.render(self.text, self.antialias, self.color)
+            self.text_bmp = self.font.render(self.text, self.antialias, self.color)
         if self.text_position is None:
-            self.text_position = text.get_rect()
+            self.text_position = self.text_bmp.get_rect()
             if bool(self.aligment & ALIGN_LEFT):   self.ox = self.text_position.left
             if bool(self.aligment & ALIGN_CENTER): self.ox = self.text_position.centerx
             if bool(self.aligment & ALIGN_RIGHT):  self.ox = self.text_position.right

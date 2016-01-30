@@ -12,6 +12,9 @@ from gameentities import * # <- Eliminar asterisco
 from gameboard import *
 
 class GameEnemy(GameObject):
+    LIFE = 70
+    MINVEL = 10
+    MAXVEL = 20
     def __init__(self, *args, **kwargs):
         GameObject.__init__(self,*args,**kwargs)
         self.z = 25
@@ -19,10 +22,11 @@ class GameEnemy(GameObject):
         self.x = GamePath.PATH[self.posnum].x + random.randint(-12,12)
         self.y = GamePath.PATH[self.posnum].y + random.randint(-12,12)
         self.posnum += 1
-        self.velocity = 200
-        self.minvelocity = 20
-        self.maxvelocity = 200
-        self.life = 70
+        self.velocity = 100
+        self.minvelocity = self.MINVEL
+        self.maxvelocity = self.MAXVEL
+        self.life = self.LIFE
+        self.money = 2
 
     def draw(self, screen):
         pygame.draw.circle(screen, (200,80,80), (int(self.x),int(self.y)) , 8)
@@ -32,12 +36,24 @@ class GameEnemy(GameObject):
     def receive_damage(self, damage):
         self.life -= damage
         if self.life <= 0:
-            self.destruct()
+            self.death()
+
+    def death(self):
+        # enemy dead
+        if not self.alive(): return # evitar contar dos veces.
+        self.game.money += self.money
+        self.destruct() # muerto
+
+    def path_ended(self):
+        # enemy won
+        if not self.alive(): return # evitar descontar dos veces.
+        self.game.money -= self.money
+        self.destruct() # fin del camino
 
     def logic(self, new_time):
         GameObject.logic(self,new_time)
         if self.posnum not in GamePath.PATH:
-            self.destruct() # fin del camino
+            self.path_ended()
             return
         dstx,dsty = GamePath.PATH[self.posnum].x,GamePath.PATH[self.posnum].y
         dx, dy = dstx - self.x , dsty - self.y
