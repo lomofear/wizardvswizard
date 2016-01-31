@@ -70,6 +70,10 @@ class TowerGame(object):
         self._money = 0
         self.ui_money = None 
         self.scr_rect = self.screen.get_rect()
+        self._statusbar = ""
+        self.ui_status = None
+        self._selected_weapon = 1
+        
         
     def setup(self):
         """
@@ -91,15 +95,62 @@ class TowerGame(object):
         self.draw_callbacks[:] = []
         self.draw_callbacks.append(GameObject.draw_all)
         self.last_enemy = 0
-        self.time_between_enemies = 6
+        self.time_between_enemies = 3
         self.cursor = GameCursor(self)
         # dinero al iniciar, 100$
-        self._money = 60
+        self._money = 200
         self.ui_money = GameText(self)
         self.ui_money.setText("Money: %d$" % self.money)
         self.ui_money.setPosition(
             (self.scr_rect.right, self.scr_rect.top), 
             ALIGN_RIGHT | ALIGN_TOP)
+        self._statusbar = ""
+        self.ui_status = GameText(self)
+        self.ui_status.setText(self._statusbar)
+        self.ui_status.setPosition(
+            (self.scr_rect.left, self.scr_rect.bottom),
+            ALIGN_LEFT | ALIGN_BOTTOM)
+
+        self.ui_weapon = GameText(self)
+        self.ui_weapon.setPosition(
+            (self.scr_rect.right, self.scr_rect.bottom),
+            ALIGN_RIGHT | ALIGN_BOTTOM)
+        self.selected_weapon = 1
+
+    @property
+    def selected_weapon(self): return self._selected_weapon
+    @selected_weapon.setter
+    def selected_weapon(self, x): 
+        self._selected_weapon = x
+        text = ""
+        for i in [1,2,3,4,5,6,7,8,9,0]:
+            if i == self.selected_weapon:
+                text += " [%d]" %i
+            else:
+                text += "  %d  " %i
+
+        if x == 1: self.statusbar=u"(I) Misil mágico. Rápido, Mágico. 25$"
+        if x == 2: self.statusbar=u"(I) Llamarada de Akram. Distancia, Arrolla, Fuego. 55$"
+        if x == 3: self.statusbar=u"(I) Confusión. Ralentiza. 40$"
+        if x == 4: self.statusbar=u"(II) Maldición. Penaliza, Splash. 65$"
+        if x == 5: self.statusbar=u"(II) Rayo. Instantáneo, Salta, Eléctrico. 75$"
+        if x == 6: self.statusbar=u"(II) Telaraña. Ralentiza, Splash. 85$"
+        if x == 7: self.statusbar=u"(III) Bola de fuego. Distancia, Splash, Incendiario. 105$"
+        if x == 8: self.statusbar=u"(III) Nube Pestilente. Distancia, Ralentiza, Splash. 135$"
+        if x == 9: self.statusbar=u"(III) Flecha ácida. Distancia, Rápido, Veneno. 165$"
+        if x == 0: self.statusbar=u"(+) Subir torre de nivel. +50% $"
+        
+        self.ui_weapon.setText(text)
+        
+    
+    @property
+    def statusbar(self): return self._statusbar
+    @statusbar.setter
+    def statusbar(self, x): 
+        self._statusbar = x
+        self.ui_status.setText(self._statusbar)
+        
+        
     @property
     def money(self):
         return self._money
@@ -155,7 +206,7 @@ class TowerGame(object):
             self.last_enemy = self.frametime
             self.enemy_n += 1
             time_k = min(1.0,self.time_between_enemies) ** 2.0
-            self.time_between_enemies /= 1 + ((0.20 / self.enemy_n) 
+            self.time_between_enemies /= 1 + ((0.40 / self.enemy_n) 
                                 * time_k)
             GameEnemy(self)
             if self.enemy_n % 10 == 0:
@@ -205,14 +256,22 @@ class TowerGame(object):
         self.cursor.y = y
         self.cursor.px = px
         self.cursor.py = py
-        cost = 25
+        Tower = GameTower
+        if self.selected_weapon == 1: Tower = GameTower
+        if self.selected_weapon == 2: Tower = GameTower2
+        if self.selected_weapon == 9: Tower = GameTower9
+            
+        cost = Tower.COST
         if self.money >= cost:
             try:
-                tower = GameTower(self, x=x, y=y, px = px, py=py)
+                tower = Tower(self, x=x, y=y, px = px, py=py)
                 self.money -= cost
+                self.statusbar = "Nueva torre adquirida por %d$" % cost
             except ValueError:
                 print "Posicion de torre no valida"
+                self.statusbar = "Posicion de torre no valida"
         else:
+            self.statusbar = "Necesitas al menos %d$ para comprar la torre" % cost
             print "no hay dinero"
             
 
@@ -223,6 +282,36 @@ class TowerGame(object):
         if event.key == pygame.K_ESCAPE:
             self.on_quit(event)
         # Seleccionar tipo de torreta con los numeros 1-9
+        if event.key == pygame.K_1:
+            self.selected_weapon = 1
+            
+        if event.key == pygame.K_2:
+            self.selected_weapon = 2
+        
+        if event.key == pygame.K_3:
+            self.selected_weapon = 3
+            
+        if event.key == pygame.K_4:
+            self.selected_weapon = 4
+        
+        if event.key == pygame.K_5:
+            self.selected_weapon = 5
+            
+        if event.key == pygame.K_6:
+            self.selected_weapon = 6
+            
+        if event.key == pygame.K_7:
+            self.selected_weapon = 7
+            
+        if event.key == pygame.K_8:
+            self.selected_weapon = 8
+        
+        if event.key == pygame.K_9:
+            self.selected_weapon = 9
+            
+        if event.key == pygame.K_0:
+            self.selected_weapon = 0
+        
         
 
     def process_events(self):

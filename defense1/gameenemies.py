@@ -11,10 +11,27 @@ from gameutilities import * # <- Eliminar asterisco
 from gameentities import * # <- Eliminar asterisco
 from gameboard import *
 
+class GameDamage(GameObject):
+    def __init__(self, *args, **kwargs):
+        GameObject.__init__(self,*args,**kwargs)
+        self.x += random.uniform(-5,5)
+        self.y += random.uniform(-5,5)
+        self.maxtime = 1.5
+        self.curtime = 0
+        self.z = -15
+        
+    def draw(self, screen):
+        self.curtime += self.dtime
+        r = int((self.maxtime - self.curtime) / float(self.maxtime) * 6)
+        if r <1: r = 1
+        pygame.draw.circle(screen, (200,255,255), (int(self.x),int(self.y)) , r)
+        if self.curtime > self.maxtime: self.destruct()
+
 class GameEnemy(GameObject):
     LIFE = 70
     MINVEL = 10
-    MAXVEL = 20
+    MAXVEL = 50
+    MONEY = 4
     def __init__(self, *args, **kwargs):
         GameObject.__init__(self,*args,**kwargs)
         self.z = 25
@@ -26,7 +43,7 @@ class GameEnemy(GameObject):
         self.minvelocity = self.MINVEL
         self.maxvelocity = self.MAXVEL
         self.life = self.LIFE
-        self.money = 2
+        self.money = self.MONEY
 
     def draw(self, screen):
         pygame.draw.circle(screen, (200,80,80), (int(self.x),int(self.y)) , 8)
@@ -34,9 +51,12 @@ class GameEnemy(GameObject):
         pygame.draw.circle(screen, (255,100,100), (int(self.x),int(self.y)) , 8, 1)
     
     def receive_damage(self, damage):
+        GameDamage(self.game, x=self.x, y=self.y)
+        dealt = min(self.life, damage)
         self.life -= damage
         if self.life <= 0:
             self.death()
+        return dealt
 
     def death(self):
         # enemy dead
