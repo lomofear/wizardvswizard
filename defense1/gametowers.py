@@ -14,8 +14,8 @@ from gameshots import *
 
 class GameTower(GameBoardBox):
     SOUND_FILE = "../resources/laser_e3.ogg"
-    RANGE = 100
-    SHOT_FREQ = 2.0
+    RANGE = 60
+    SHOT_FREQ = 3.0
     COST = 25
     def __init__(self, *args, **kwargs):
         GameBoardBox.__init__(self,*args,**kwargs)
@@ -55,7 +55,7 @@ class GameTower(GameBoardBox):
             if not isinstance(gameobject, GameEnemy): continue
             dist = math.hypot(self.x-gameobject.x, self.y-gameobject.y)
             if dist > self.range: continue
-            targets += [(dist, gameobject)]
+            targets += [(dist* random.uniform(0.9,1.1), gameobject)]
         targets.sort()
         
         if targets:
@@ -108,7 +108,7 @@ class GameTower2(GameTower):
             if not isinstance(gameobject, GameEnemy): continue
             dist = math.hypot(self.x-gameobject.x, self.y-gameobject.y)
             if dist > self.range: continue
-            targets += [(dist, gameobject)]
+            targets += [(dist* random.uniform(0.9,1.1), gameobject)]
         targets.sort()
         
         if targets:
@@ -161,7 +161,7 @@ class GameTower9(GameTower):
             if not isinstance(gameobject, GameEnemy): continue
             dist = math.hypot(self.x-gameobject.x, self.y-gameobject.y)
             if dist > self.range: continue
-            targets += [(dist, gameobject)]
+            targets += [(dist * random.uniform(0.9,1.1), gameobject)]
         targets.sort()
         
         if targets:
@@ -171,7 +171,11 @@ class GameTower9(GameTower):
             self.angle = new_ang
             if self.time - self.last_shot > 1.0 / self.shot_freq and random.randint(0,2) == 0: 
                 self.last_shot = self.time
-                shot_angle = self.angle + random.uniform(-0.5,0.5)
+                if dist > 150:
+                    shot_angle = self.angle + random.uniform(-0.5,0.5)
+                else:
+                    shot_angle = self.angle + random.uniform(-0.05,0.05)
+                    
                 self.sound.stop()
                 self.sound.play(maxtime=50)
                 self.sound.set_volume(0.25)                
@@ -180,3 +184,5 @@ class GameTower9(GameTower):
                 shot = GameShot9(self.game, 
                                  target = gameobject, parent = self, 
                                  angle = shot_angle)
+                if dist < 150:
+                    shot.speed /= 2

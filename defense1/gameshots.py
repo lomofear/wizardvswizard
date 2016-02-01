@@ -12,11 +12,11 @@ from gameentities import * # <- Eliminar asterisco
 from gameenemies import GameEnemy
         
 class GameShot(GameObject):
-    SPEED = 100
+    SPEED = 200
     MAXTIME = 1.0
-    DAMAGE = 8
+    DAMAGE = 5
     TRAMPLE = False
-    MASS = 20.0
+    MASS = 10.0
     def __init__(self, *args, **kwargs):
         self.target = kwargs.pop('target', None)
         self.parent = kwargs.pop('parent', None)
@@ -127,10 +127,17 @@ class GameShot(GameObject):
         mass = max([self.mass / (self.speed+50),0.00005])
         if dist_to_target < 11 + current_speed/10:
             mass /= 10.0
+        new_speed = self.speed
+        if self.speed > dist_to_target * 5:
+            new_speed = dist_to_target * 5 + 20
         
-        self.dx = (self.dx * mass + ax * self.speed * self.dtime) / (mass + self.dtime)
-        self.dy = (self.dy * mass + ay * self.speed * self.dtime) / (mass + self.dtime)
+        self.dx = (self.dx * mass + ax * new_speed * self.dtime) / (mass + self.dtime)
+        self.dy = (self.dy * mass + ay * new_speed * self.dtime) / (mass + self.dtime)
         current_speed = math.hypot(self.dx, self.dy)
+        if current_speed > dist_to_target * 8 + 0:
+            f = current_speed / (dist_to_target * 8 + 0)
+            self.dx /= f ** (self.dtime * 200)
+            self.dy /= f ** (self.dtime * 200)
         corr = coeff_correlacion_vectores(self.dx,self.dy,ax,ay)
         if corr < 0.9:
             f = (corr + 1.1) / 2.0
@@ -161,9 +168,9 @@ class GameShot(GameObject):
         pygame.draw.line(screen, (255,255,random.randint(1,250)), start_pos, end_pos, 1)
             
 class GameShot2(GameShot):
-    SPEED = 200
+    SPEED = 600
     MAXTIME = 1.0
-    DAMAGE = 150
+    DAMAGE = 70
     TRAMPLE = True
     MASS = 30.0
     def draw(self, screen):
@@ -202,7 +209,7 @@ class GameShot2(GameShot):
 class GameShot9(GameShot):
     SPEED = 800
     MAXTIME = 0.35
-    DAMAGE = 50
+    DAMAGE = 15
     TRAMPLE = False
     MASS = 15.0
     def draw(self, screen):

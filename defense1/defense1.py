@@ -209,8 +209,9 @@ class TowerGame(object):
             self.time_between_enemies /= 1 + ((0.40 / self.enemy_n) 
                                 * time_k)
             GameEnemy(self)
-            if self.enemy_n % 10 == 0:
-                GameEnemy.LIFE += 1
+            if self.enemy_n % (1+500/self.enemy_n) == 0:
+                GameEnemy.LIFE += 1 + self.enemy_n / 200
+                print GameEnemy.LIFE 
             if self.enemy_n % 2 == 0:
                 GameEnemy.MAXVEL += 2
                 GameEnemy.MINVEL += 1
