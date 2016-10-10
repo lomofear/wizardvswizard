@@ -60,10 +60,11 @@ function setup() {
     logo = new Sprite(
         loader.resources["img/logo1.jpg"].texture
     );
-    //logo.scale.set(0.5, 0.5);
+    logo.scale.set(0.25, 0.25);
     logo.anchor.set(0.5, 0.5);
     logo.x = GAME_WIDTH / 2;
-    logo.y = GAME_HEIGHT / 2;
+    logo.y = -logo.pivot.y;
+    //logo.y = GAME_HEIGHT / 2;
     //Add the cat to the stage
     stage.addChild(logo);
     stage.removeChild(loader_rect1);
@@ -75,14 +76,49 @@ function setup() {
     gameLoop();
 }
 
+var game_state = play_intro1;
+
+
 function gameLoop(){
 
-  //Loop this function 60 times per second
-  requestAnimationFrame(gameLoop);
+    //Loop this function 60 times per second
+    requestAnimationFrame(gameLoop);
 
-  //Move the cat 1 pixel per frame
-  logo.rotation += 1.0/60.0;
+    game_state();
 
-  //Render the stage
-  renderer.render(stage);
+    //Render the stage
+    renderer.render(stage);
 }
+
+function play_intro1() {
+    if (logo.scale.x < 1) {
+        logo.scale.x *= 1.01;
+        logo.scale.y *= 1.01;
+    } else {
+        logo.scale.x = 1;
+        logo.scale.y = 1;
+    }
+    if (logo.y < GAME_HEIGHT / 2) {
+        logo.rotation += 2.0/60.0;
+        logo.y += 1 + logo.scale.x;
+    } else {
+        logo.y = GAME_HEIGHT / 2;
+        while (logo.rotation > 0.1) logo.rotation -= Math.PI * 2;
+        if (logo.rotation < 0) {
+            logo.rotation += 5.0/60.0;
+        } else {
+            logo.rotation = 0;
+            game_state = play_intro2;
+        }
+    }
+
+}
+function play_intro2() {
+    if (logo.y > GAME_HEIGHT / 4) {
+        logo.y -= 1;
+    } else {
+        logo.y = GAME_HEIGHT / 4;
+    }
+
+}
+
