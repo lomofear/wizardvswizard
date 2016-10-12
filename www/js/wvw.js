@@ -1,6 +1,8 @@
+"use strict";
 var Container = PIXI.Container,
     autoDetectRenderer = PIXI.autoDetectRenderer,
     loader = PIXI.loader,
+    Rectangle = PIXI.Rectangle,
     resources = PIXI.loader.resources,
     Text = PIXI.Text,
     Sprite = PIXI.Sprite;
@@ -9,6 +11,12 @@ var GAME_HEIGHT = 512;
 var renderer = autoDetectRenderer(GAME_WIDTH, GAME_HEIGHT); // aspect: 7/4
 var logo;
 var FPS = 30;
+
+window.onpopstate = function(event) {
+  console.log("location: " + document.location + ", state: " + JSON.stringify(event.state));
+};
+
+PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
 
 renderer.backgroundColor = 0xFFFFFF;
 renderer.view.style.position = "absolute";
@@ -60,6 +68,10 @@ loader
   .add( [
     "img/logo1.png",
     "img/button1.png",
+
+    "img/creatures.png",
+    "img/background1.jpg",
+
     ""
     ]
   )
@@ -79,6 +91,7 @@ function setup() {
     stage.addChild(logo);
     stage.removeChild(loader_rect1);
     stage.removeChild(loader_rect2);
+    history.pushState({page: "title"}, "Wizard VS Wizard - Title", "#title");
     //Render the stage
     renderer.render(stage);
 
@@ -88,7 +101,17 @@ function setup() {
 
 var game_state = play_intro1;
 
-
+function launchIntoFullscreen(element) {
+  if(element.requestFullscreen) {
+    element.requestFullscreen();
+  } else if(element.mozRequestFullScreen) {
+    element.mozRequestFullScreen();
+  } else if(element.webkitRequestFullscreen) {
+    element.webkitRequestFullscreen();
+  } else if(element.msRequestFullscreen) {
+    element.msRequestFullscreen();
+  }
+}
 function gameLoop(){
 
     //Loop this function 60 times per second
@@ -101,12 +124,15 @@ function gameLoop(){
     renderer.render(stage);
 }
 
+function unsetup_intro1() {
+    stage.removeChild(logo);
+}
 
 function play_intro1() {
 
-          /*  setup_intro2();
-            game_state = play_intro2;
-*/
+    //setup_intro2();
+    //game_state = play_intro2;
+
     if (logo.scale.x < 1) {
         logo.scale.x *= 1.015;
         logo.scale.y *= 1.015;
@@ -163,13 +189,9 @@ function create_button(text, onDown) {
         bg.on('touchstart', onDown);
         button.onDown = onDown;
     }
-
+    button.clicked = false;
     return button;
 
-}
-
-function menu_button1_onDown() {
-    sprites.menu_button1.alpha = 0.5;
 }
 
 function setup_intro2() {
@@ -178,11 +200,22 @@ function setup_intro2() {
     logo.scale.set(1,1);
 
     sprites.menu_button1 = create_button("Start Game", menu_button1_onDown);
-    //sprites.menu_button1.anchor.set(0.5, 0.5);
     sprites.menu_button1.x = GAME_WIDTH / 2;
     sprites.menu_button1.y = GAME_HEIGHT / 2 + 32;
     sprites.menu_button1.alpha = 0;
+    sprites.menu_button1.afterClick = menu_button1_afterClick;
     stage.addChild(sprites.menu_button1);
+
+    sprites.menu_button2 = create_button("FullScreen", function () {launchIntoFullscreen(document.getElementsByTagName("canvas")[0]);});
+    sprites.menu_button2.x = GAME_WIDTH / 2;
+    sprites.menu_button2.y = GAME_HEIGHT / 2 + 96;
+    sprites.menu_button2.alpha = 0;
+    sprites.menu_button2.afterClick = function() {};
+    stage.addChild(sprites.menu_button2);
+}
+
+function unsetup_intro2() {
+    stage.removeChild(sprites.menu_button1);
 }
 
 function play_intro2() {
@@ -193,8 +226,81 @@ function play_intro2() {
     }
     if (sprites.menu_button1.alpha < 1 ) {
         sprites.menu_button1.alpha += 0.02;
-        if (sprites.menu_button1.alpha > 0.99 ) sprites.menu_button1.alpha = 1;
+        if (sprites.menu_button1.alpha > 0.99 ) {
+            sprites.menu_button1.alpha = 1;
+            if (sprites.menu_button1.clicked == true) {
+                sprites.menu_button1.clicked = false;
+                sprites.menu_button1.afterClick();
+            }
+
+        }
+    }
+
+    if (sprites.menu_button2.alpha < 1 ) {
+        sprites.menu_button2.alpha += 0.02;
+        if (sprites.menu_button2.alpha > 0.99 ) {
+            sprites.menu_button2.alpha = 1;
+        }
     }
 
 }
 
+function menu_button1_onDown() {
+    sprites.menu_button1.alpha = 0.5;
+    sprites.menu_button1.clicked = true;
+    //launchIntoFullscreen(document.documentElement); // Whole page
+    //launchIntoFullscreen(document.getElementsByTagName("canvas")[0]); // Canvas
+
+}
+
+function menu_button1_afterClick() {
+    console.log("INIT Start Game.");
+    unsetup_intro1();
+    unsetup_intro2();
+    setup_startgame();
+    game_state = play_startgame;
+}
+
+function getCreatureSprite(spritename) {
+    var locations = {
+        "mage" : [2,108, 36,50],
+
+        "" : ""
+    };
+
+    var texture = loader.resources["img/creatures.png"].texture;
+    var pos = locations[spritename];
+    var x = pos[0];
+    var y = pos[1];
+    var w = pos[2];
+    var h = pos[3];
+    console.log("creature Sprite " + spritename + " x:" + x + " y:" + y + " w:" + w + " h:" + h);
+    texture.frame = new Rectangle(x,y,w,h);
+    var sprite = new Sprite(texture);
+    sprite.scale.set(2.0, 2.0)
+    sprite.anchor.set(0.5, 0.9);
+    return sprite;
+}
+
+function setup_startgame() {
+    history.pushState({page: "game"}, "Wizard VS Wizard - Game", "#game");
+
+    sprites.background1 = new Sprite(loader.resources["img/background1.jpg"].texture);
+    sprites.background1.scale.x = GAME_WIDTH / 1200.0;
+    sprites.background1.scale.y = GAME_WIDTH / 1200.0;
+    stage.addChild(sprites.background1);
+
+    sprites.player = getCreatureSprite("mage");
+    stage.addChild(sprites.player);
+    sprites.player.x = GAME_WIDTH * 0.8;
+    sprites.player.y = GAME_HEIGHT * 0.7;
+    sprites.player.dx = -1;
+
+}
+
+function play_startgame() {
+    sprites.player.x += sprites.player.dx;
+    if (sprites.player.x  < GAME_WIDTH * 0.5) sprites.player.dx = +1;
+    if (sprites.player.x  > GAME_WIDTH * 0.8) sprites.player.dx = -1;
+
+}
