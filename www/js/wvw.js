@@ -6,6 +6,8 @@ var Container = PIXI.Container,
     resources = PIXI.loader.resources,
     Text = PIXI.Text,
     Sprite = PIXI.Sprite;
+var TextureCache = PIXI.utils.TextureCache;
+
 var GAME_WIDTH = 896;
 var GAME_HEIGHT = 512;
 var renderer = autoDetectRenderer(GAME_WIDTH, GAME_HEIGHT); // aspect: 7/4
@@ -14,6 +16,9 @@ var FPS = 30;
 
 window.onpopstate = function(event) {
   console.log("location: " + document.location + ", state: " + JSON.stringify(event.state));
+    setup_intro1();
+    game_state = play_intro1;
+
 };
 
 PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
@@ -69,7 +74,7 @@ loader
     "img/logo1.png",
     "img/button1.png",
 
-    "img/creatures.png",
+    "img/creatures.json",
     "img/background1.jpg",
 
     ""
@@ -79,19 +84,10 @@ loader
   .load(setup);
 
 function setup() {
-    logo = new Sprite(
-        loader.resources["img/logo1.png"].texture
-    );
-    logo.scale.set(0.25, 0.25);
-    logo.anchor.set(0.5, 0.5);
-    logo.x = GAME_WIDTH / 2;
-    logo.y = -logo.pivot.y;
-    //logo.y = GAME_HEIGHT / 2;
-    //Add the cat to the stage
-    stage.addChild(logo);
     stage.removeChild(loader_rect1);
     stage.removeChild(loader_rect2);
-    history.pushState({page: "title"}, "Wizard VS Wizard - Title", "#title");
+    setup_intro1();
+    game_state = play_intro1;
     //Render the stage
     renderer.render(stage);
 
@@ -122,6 +118,34 @@ function gameLoop(){
 
     //Render the stage
     renderer.render(stage);
+}
+
+function setup_intro1() {
+    stage.removeChildren();
+    logo = new Sprite(
+        loader.resources["img/logo1.png"].texture
+    );
+    logo.scale.set(0.25, 0.25);
+    logo.anchor.set(0.5, 0.5);
+    logo.x = GAME_WIDTH / 2;
+    logo.y = -logo.pivot.y;
+    //logo.y = GAME_HEIGHT / 2;
+    //Add the cat to the stage
+    stage.addChild(logo);
+
+    logo.interactive = true;
+    logo.onDown = function () {
+        //if (game_state != play_intro1) return;
+        setup_intro2();
+        game_state = play_intro2;
+
+
+    }
+    logo.on('mousedown', logo.onDown);
+    logo.on('touchstart', logo.onDown);
+
+    history.pushState({page: "title"}, "Wizard VS Wizard - Title", "#title");
+
 }
 
 function unsetup_intro1() {
@@ -188,6 +212,7 @@ function create_button(text, onDown) {
         bg.on('mousedown', onDown);
         bg.on('touchstart', onDown);
         button.onDown = onDown;
+        bg.hitArea = new Rectangle(-150, -28, 300, 58);
     }
     button.clicked = false;
     return button;
@@ -216,6 +241,7 @@ function setup_intro2() {
 
 function unsetup_intro2() {
     stage.removeChild(sprites.menu_button1);
+    stage.removeChild(sprites.menu_button2);
 }
 
 function play_intro2() {
@@ -246,6 +272,11 @@ function play_intro2() {
 }
 
 function menu_button1_onDown() {
+    if (sprites.menu_button1.clicked) {
+        sprites.menu_button1.afterClick();
+        sprites.menu_button1.clicked = false;
+        return;
+    }
     sprites.menu_button1.alpha = 0.5;
     sprites.menu_button1.clicked = true;
     //launchIntoFullscreen(document.documentElement); // Whole page
@@ -262,13 +293,18 @@ function menu_button1_afterClick() {
 }
 
 function getCreatureSprite(spritename) {
+    // OLD VERSION. IT DOESNT WORK FOR MULTIPLE SPRITES!
     var locations = {
         "mage" : [2,108, 36,50],
+        "goblin" : [148,287, 20, 41],
+        "imp" : [48,272, 24, 56],
 
         "" : ""
     };
 
-    var texture = loader.resources["img/creatures.png"].texture;
+    //var texture = loader.resources["img/creatures.png"].texture;
+    var texture = TextureCache["img/creatures.png"];
+
     var pos = locations[spritename];
     var x = pos[0];
     var y = pos[1];
@@ -282,7 +318,19 @@ function getCreatureSprite(spritename) {
     return sprite;
 }
 
+function getCreatureSprite(spritename) {
+    var texture = TextureCache[spritename + ".png"];
+
+    var sprite = new Sprite(texture);
+    sprite.scale.set(2.0, 2.0)
+    sprite.anchor.set(0.5, 0.9);
+    return sprite;
+}
+
 function setup_startgame() {
+
+    stage.removeChildren();
+
     history.pushState({page: "game"}, "Wizard VS Wizard - Game", "#game");
 
     sprites.background1 = new Sprite(loader.resources["img/background1.jpg"].texture);
@@ -290,11 +338,24 @@ function setup_startgame() {
     sprites.background1.scale.y = GAME_WIDTH / 1200.0;
     stage.addChild(sprites.background1);
 
+
     sprites.player = getCreatureSprite("mage");
     stage.addChild(sprites.player);
     sprites.player.x = GAME_WIDTH * 0.8;
     sprites.player.y = GAME_HEIGHT * 0.7;
     sprites.player.dx = -1;
+
+
+    sprites.enemies = []
+    sprites.enemies[0] = getCreatureSprite("goblin");
+    sprites.enemies[1] = getCreatureSprite("imp");
+
+    sprites.enemies[0].x = GAME_WIDTH * 0.2;
+    sprites.enemies[0].y = GAME_HEIGHT * 0.65;
+    sprites.enemies[1].x = GAME_WIDTH * 0.3;
+    sprites.enemies[1].y = GAME_HEIGHT * 0.75;
+    stage.addChild(sprites.enemies[0]);
+    stage.addChild(sprites.enemies[1]);
 
 }
 
