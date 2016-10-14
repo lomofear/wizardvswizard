@@ -75,6 +75,7 @@ loader
     "img/button1.png",
 
     "img/creatures.json",
+    "img/magic_spheres_lq.json",
     "img/background1.jpg",
 
     ""
@@ -327,6 +328,16 @@ function getCreatureSprite(spritename) {
     return sprite;
 }
 
+function getSphereSprite(spritename) {
+    var texture = TextureCache[spritename + "sphere.png"];
+
+    var sprite = new Sprite(texture);
+    sprite.scale.set(1.0, 1.0)
+    sprite.anchor.set(0.5, 0.5);
+    return sprite;
+}
+
+
 function setup_startgame() {
 
     stage.removeChildren();
@@ -357,11 +368,42 @@ function setup_startgame() {
     stage.addChild(sprites.enemies[0]);
     stage.addChild(sprites.enemies[1]);
 
+    sprites.sphere1 = getSphereSprite("red");
+    sprites.sphere1.x = GAME_WIDTH * 0.4;
+    sprites.sphere1.y = GAME_HEIGHT * 0.9;
+
+    sprites.sphere2 = getSphereSprite("green");
+    sprites.sphere2.x = GAME_WIDTH * 0.5;
+    sprites.sphere2.y = GAME_HEIGHT * 0.9;
+
+    sprites.sphere3 = getSphereSprite("purple");
+    sprites.sphere3.x = GAME_WIDTH * 0.6;
+    sprites.sphere3.y = GAME_HEIGHT * 0.9;
+
+    sprites.sphere4 = getSphereSprite("blue");
+    sprites.sphere4.x = GAME_WIDTH * 0.7;
+    sprites.sphere4.y = GAME_HEIGHT * 0.9;
+
+    sprites.sphere5 = getSphereSprite("yellow");
+    sprites.sphere5.x = GAME_WIDTH * 0.8;
+    sprites.sphere5.y = GAME_HEIGHT * 0.9;
+
+    sprites.sphere6 = getSphereSprite("grey");
+    sprites.sphere6.x = GAME_WIDTH * 0.9;
+    sprites.sphere6.y = GAME_HEIGHT * 0.9;
+
+    stage.addChild(sprites.sphere1);
+    stage.addChild(sprites.sphere2);
+    stage.addChild(sprites.sphere3);
+    stage.addChild(sprites.sphere4);
+    stage.addChild(sprites.sphere5);
+    stage.addChild(sprites.sphere6);
+
 }
 
 function play_startgame() {
     sprites.player.x += sprites.player.dx;
-    if (sprites.player.x  < GAME_WIDTH * 0.5) sprites.player.dx = +1;
+    if (sprites.player.x  < GAME_WIDTH * 0.7) sprites.player.dx = +1;
     if (sprites.player.x  > GAME_WIDTH * 0.8) sprites.player.dx = -1;
 
 }
