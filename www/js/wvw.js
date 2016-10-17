@@ -71,12 +71,16 @@ function loadProgressHandler(loader, resource) {
 
 loader
   .add( [
+
     "img/logo1.png",
     "img/button1.png",
 
     "img/creatures.json",
     "img/magic_spheres_lq.json",
     "img/background1.jpg",
+
+    "fnt/LatoMediumBold24.fnt",
+    "fnt/LatoMediumBold32.fnt",
 
     ""
     ]
@@ -144,6 +148,7 @@ function setup_intro1() {
     }
     logo.on('mousedown', logo.onDown);
     logo.on('touchstart', logo.onDown);
+
 
     history.pushState({page: "title"}, "Wizard VS Wizard - Title", "#title");
 
@@ -399,11 +404,19 @@ function setup_startgame() {
     stage.addChild(sprites.sphere5);
     stage.addChild(sprites.sphere6);
 
+    sprites.bitmapText = new PIXI.extras.BitmapText("text using a fancy font!", {font: "24px LatoMediumBold24", align: "center"});
+    sprites.bitmapText.x = 100;
+    sprites.bitmapText.y = 250;
+
+    stage.addChild(sprites.bitmapText);
+
 }
 
 function play_startgame() {
     sprites.player.x += sprites.player.dx;
     if (sprites.player.x  < GAME_WIDTH * 0.7) sprites.player.dx = +1;
     if (sprites.player.x  > GAME_WIDTH * 0.8) sprites.player.dx = -1;
-
+    sprites.bitmapText.text = parseInt(sprites.player.x).toString();
+    sprites.bitmapText.x = sprites.player.x - 0;
+    sprites.bitmapText.y = sprites.player.y + 20;
 }
