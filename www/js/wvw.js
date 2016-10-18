@@ -404,6 +404,7 @@ function setup_startgame() {
     stage.addChild(sprites.sphere5);
     stage.addChild(sprites.sphere6);
 
+
     sprites.bitmapText = new PIXI.extras.BitmapText("text using a fancy font!", {font: "24px LatoMediumBold24", align: "center"});
     sprites.bitmapText.x = 100;
     sprites.bitmapText.y = 250;

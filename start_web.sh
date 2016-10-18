@@ -21,4 +21,12 @@ then
     exit 0;
 fi
 
+if test -f /c/nginx*/nginx.exe
+then
+	tail -f /c/nginx*/logs/access.log &
+TAILPID=$!
+	(cd /c/nginx*/ ; ./nginx.exe )
+	kill $TAILPID
+fi
+
 echo >&2 "ERROR: No HTTP-SERVER one-liners known found. Either install Python3 or Node.js"; exit 1;
