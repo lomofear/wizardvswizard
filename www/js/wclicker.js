@@ -145,13 +145,13 @@ function title_text_clicked() {
     game.mana1 = 0;
     game.mana2 = 0;
     game.mage_power_mana0 = 1;
-    game.mage_power_mana1 = 1;
-    game.mage_power_mana2 = 1;
+    game.mage_power_mana1 = 0;
+    game.mage_power_mana2 = 0;
 
     sprites.player = getCreatureSprite("mage", mage_clicked);
     stage.addChild(sprites.player);
-    sprites.player.x = 50;
-    sprites.player.y = 70;
+    sprites.player.x = 50 + 30;
+    sprites.player.y = 70 + 30;
 
 
     sprites.sphere0 = getSphereSprite("grey");
@@ -208,7 +208,7 @@ function update_mana_levels() {
         return Math.max(n,0).toFixed(2);
     }
     function f(x,q) {
-        return (Math.pow(x / q / q, 1.0/q) / q).toFixed(2);
+        return ((Math.pow(20 * q + x / q, 1.0/q) - Math.pow(20 * q, 1.0/q)  )).toFixed(2);
     }
     //console.log(game.mana0 + " " + Math.log(game.mana0+1).toFixed(2));
     game.lvmana0 = f(game.mana0, 2);
@@ -225,7 +225,7 @@ function getCreatureSprite(spritename, onDown) {
     var cntsprite = new Container();
     var frame = new Sprite(loader.resources["img/frame1.png"].texture);
     var sprite = new Sprite(texture);
-    frame.scale.set(0.3, 0.3);
+    frame.scale.set(0.4, 0.4);
     frame.anchor.set(0.5, 0.5);
     sprite.scale.set(1.0, 1.0)
     sprite.anchor.set(0.5, 0.9);
@@ -256,17 +256,17 @@ function getSphereSprite(spritename) {
 }
 
 function mage_clicked() {
-    game.mana0 += game.mage_power_mana0 + parseInt(game.lvmana0);
-    game.mana1 += game.mage_power_mana1 + parseInt(game.lvmana1);
-    game.mana2 += game.mage_power_mana2 + parseInt(game.lvmana2);
+    game.mana0 += game.mage_power_mana0 ;
+    game.mana1 += game.mage_power_mana1 + parseInt(game.lvmana0) / 10.0;
+    game.mana2 += game.mage_power_mana2 + parseInt(game.lvmana1) / 10.0;
     update_mana_levels();
 
 }
 
 function play_game() {
     game.mana0 += parseFloat(game.lvmana0) / 100.0;
-    game.mana1 += parseFloat(game.lvmana1) / 300.0 + parseFloat(game.lvmana0) / 1000.0;
-    game.mana2 += parseFloat(game.lvmana2) / 1000.0 + parseFloat(game.lvmana1) / 3000.0;
+    game.mana1 += parseFloat(game.lvmana1) / 100.0 + parseFloat(game.lvmana0) / 1000.0;
+    game.mana2 += parseFloat(game.lvmana2) / 100.0 + parseFloat(game.lvmana1) / 1000.0;
     update_mana_levels();
 
 }
