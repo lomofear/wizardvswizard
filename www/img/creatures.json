@@ -7,11 +7,11 @@
     "frames": {
         "mage.png":
         {
-            "frame": {"x":2,"y":108,"w":36,"h":50},
+            "frame": {"x":0,"y":102,"w":40,"h":58},
             "rotated": false,
             "trimmed": false,
-            "spriteSourceSize": {"x":0,"y":0,"w":36,"h":50},
-            "sourceSize": {"w":36,"h":50}
+            "spriteSourceSize": {"x":0,"y":0,"w":40,"h":58},
+            "sourceSize": {"w":40,"h":58}
         },
         "goblin.png":
         {

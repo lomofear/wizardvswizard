@@ -1,8 +1,8 @@
 #!/bin/bash
 
-
 # one-liners for serving static data on a folder:
 # https://gist.github.com/willurd/5720255
+
 
 
 if command -v static >/dev/null 2>&1
