@@ -207,10 +207,13 @@ function update_mana_levels() {
         else n = x / Math.exp(q);
         return Math.max(n,0).toFixed(2);
     }
-    console.log(game.mana0 + " " + Math.log(game.mana0+1).toFixed(2));
-    game.lvmana0 = f(game.mana0, 1);
+    function f(x,q) {
+        return (Math.pow(x / q / q, 1.0/q) / q).toFixed(2);
+    }
+    //console.log(game.mana0 + " " + Math.log(game.mana0+1).toFixed(2));
+    game.lvmana0 = f(game.mana0, 2);
     game.lvmana1 = f(game.mana1, 3);
-    game.lvmana2 = f(game.mana2, 5);
+    game.lvmana2 = f(game.mana2, 4);
 
     sprites.sphere0text.text = "Lvl\n" + game.lvmana0;
     sprites.sphere1text.text = "Lvl\n" + game.lvmana1;
@@ -253,14 +256,18 @@ function getSphereSprite(spritename) {
 }
 
 function mage_clicked() {
-    game.mana0 += game.mage_power_mana0;
-    game.mana1 += game.mage_power_mana1;
-    game.mana2 += game.mage_power_mana2;
+    game.mana0 += game.mage_power_mana0 + parseInt(game.lvmana0);
+    game.mana1 += game.mage_power_mana1 + parseInt(game.lvmana1);
+    game.mana2 += game.mage_power_mana2 + parseInt(game.lvmana2);
     update_mana_levels();
 
 }
 
 function play_game() {
+    game.mana0 += parseFloat(game.lvmana0) / 100.0;
+    game.mana1 += parseFloat(game.lvmana1) / 300.0 + parseFloat(game.lvmana0) / 1000.0;
+    game.mana2 += parseFloat(game.lvmana2) / 1000.0 + parseFloat(game.lvmana1) / 3000.0;
+    update_mana_levels();
 
 }
 
