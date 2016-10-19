@@ -113,6 +113,7 @@ function launchIntoFullscreen(element) {
     element.msRequestFullscreen();
   }
 }
+
 function gameLoop(){
 
     //Loop this function 60 times per second
