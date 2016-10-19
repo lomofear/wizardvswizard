@@ -12,7 +12,7 @@ var GAME_WIDTH = 720 / 2;
 var GAME_HEIGHT = 1280 / 2;
 var renderer = autoDetectRenderer(GAME_WIDTH, GAME_HEIGHT);
 
-var EARN_SPEED = 5;
+var EARN_SPEED = 10;
 var sprites = new Object();
 
 var game = new Object();
@@ -209,14 +209,14 @@ function update_mana_levels() {
         return Math.max(n,0).toFixed(2);
     }
     function f(x,q) {
-        var p1 = Math.pow(20 * q + x / q, 1.0/q) - Math.pow(20 * q, 1.0/q) ;
-        var p2 = 15 * p1 / Math.pow(Math.log(x * q + 10),2) + 10;
+        var p1 = Math.pow(20 * q + x, 1.0/q) - Math.pow(20 * q, 1.0/q) ;
+        var p2 =  q * 5 * p1 / Math.pow(Math.log(x + 10),2) + 10+ q;
         return (Math.min(p1,p2)).toFixed(2);
     }
     //console.log(game.mana0 + " " + Math.log(game.mana0+1).toFixed(2));
-    game.lvmana0 = f(game.mana0, 2);
+    game.lvmana0 = f(game.mana0, 3);
     game.lvmana1 = f(game.mana1, 4);
-    game.lvmana2 = f(game.mana2, 6);
+    game.lvmana2 = f(game.mana2, 5);
 
     sprites.sphere0text.text = "Lvl\n" + game.lvmana0;
     sprites.sphere1text.text = "Lvl\n" + game.lvmana1;
@@ -262,8 +262,8 @@ function mage_clicked() {
     var i;
     for (i=0; i < EARN_SPEED; i++) {
         game.mana0 += game.mage_power_mana0 ;
-        game.mana1 += game.mage_power_mana1 + parseInt(game.lvmana0) / 5.0;
-        game.mana2 += game.mage_power_mana2 + parseInt(game.lvmana1) / 5.0;
+        game.mana1 += game.mage_power_mana1 + parseFloat(game.lvmana0 / 25) ;
+        game.mana2 += game.mage_power_mana2 + parseFloat(game.lvmana1 / 5) ;
     }
     update_mana_levels();
 
@@ -273,8 +273,8 @@ function play_game() {
     var i;
     for (i=0; i < EARN_SPEED; i++) {
         game.mana0 += parseFloat(game.lvmana0) / 100.0;
-        game.mana1 += parseFloat(game.lvmana1) / 20.0 + parseFloat(game.lvmana0) / 100.0;
-        game.mana2 += parseFloat(game.lvmana2) / 5.0 + parseFloat(game.lvmana1) / 20.0;
+        game.mana1 += parseFloat(game.lvmana1) / 100.0 + parseFloat(game.lvmana0) / 1500.0;
+        game.mana2 += parseFloat(game.lvmana2) / 100.0 + parseFloat(game.lvmana1) / 1500.0;
     }
     update_mana_levels();
 
