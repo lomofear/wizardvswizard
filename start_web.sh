@@ -3,6 +3,16 @@
 # one-liners for serving static data on a folder:
 # https://gist.github.com/willurd/5720255
 
+if command -v nginx >/dev/null 2>&1
+then
+	tail -s.1 -f nginx-access.log &
+TAILPID=$!
+	nginx -c $(pwd)/nginx.conf  -p $(pwd) -g "error_log nginx-errolog;"
+	kill $TAILPID
+        exit 0;
+fi
+
+
 if command -v python3 >/dev/null 2>&1
 then
     echo >&2 "WARN: Sometimes Python hagns up if some packets won't get delivered."
@@ -27,6 +37,8 @@ then
 TAILPID=$!
 	(cd /c/nginx*/ ; ./nginx.exe )
 	kill $TAILPID
+        exit 0;
+
 fi
 
 echo >&2 "ERROR: No HTTP-SERVER one-liners known found. Either install Python3 or Node.js"; exit 1;
