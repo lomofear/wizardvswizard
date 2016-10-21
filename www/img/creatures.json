@@ -1,7 +1,7 @@
 {
     "meta": {
     "image": "creatures.png",
-    "size": {"w":224,"h":332},
+    "size": {"w":332,"h":332},
     "scale": "1"
     },
     "frames": {
@@ -28,6 +28,14 @@
             "trimmed": false,
             "spriteSourceSize": {"x":0,"y":0,"w":24,"h":56},
             "sourceSize": {"w":24,"h":56}
+        },
+        "altar.png":
+        {
+            "frame": {"x":229,"y":31,"w":34,"h":40},
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {"x":0,"y":0,"w":34,"h":40},
+            "sourceSize": {"w":34,"h":40}
         },
         "" : {}
     }

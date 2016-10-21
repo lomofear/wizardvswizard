@@ -12,7 +12,7 @@ var GAME_WIDTH = 720 / 2;
 var GAME_HEIGHT = 1280 / 2;
 var renderer = autoDetectRenderer(GAME_WIDTH, GAME_HEIGHT);
 
-var EARN_SPEED = 10;
+var EARN_SPEED = 1;
 var sprites = new Object();
 
 var game = new Object();
@@ -80,7 +80,7 @@ function init_game() {
         "img/button1.png",
 
         "img/creatures.json",
-        "img/magic_spheres_lq.json",
+        "img/magic_spheres.json",
         "img/background1.jpg",
 
         "fnt/LatoMediumBold24.fnt",
@@ -118,12 +118,12 @@ function setup() {
 }
 
 
-window.onpopstate = function(event) {
+/*window.onpopstate = function(event) {
     console.log("location: " + document.location + ", state: " + JSON.stringify(event.state));
     stage.removeChildren();
     init_game();
 
-};
+};*/
 
 function launchIntoFullscreen(element) {
   if(element.requestFullscreen) {
@@ -140,12 +140,12 @@ function launchIntoFullscreen(element) {
 function title_text_clicked() {
     launchIntoFullscreen(document.getElementsByTagName("canvas")[0]);
     stage.removeChildren();
-    history.pushState({page: "game"}, "Wizard Clicker - Game", "#game");
+    //history.pushState({page: "game"}, "Wizard Clicker - Game", "#game");
 
     game.mana0 = 0;
     game.mana1 = 0;
     game.mana2 = 0;
-    game.mage_power_mana0 = 1;
+    game.mage_power_mana0 = 5;
     game.mage_power_mana1 = 0;
     game.mage_power_mana2 = 0;
 
@@ -159,7 +159,7 @@ function title_text_clicked() {
     sprites.sphere0.x = GAME_WIDTH * 0.9;
     sprites.sphere0.y = GAME_HEIGHT * 0.9;
 
-    sprites.sphere0text = new PIXI.extras.BitmapText("Lvl\n0.00", {font: "16px LatoMediumBold32", align: "center"});
+    sprites.sphere0text = new PIXI.extras.BitmapText("Lvl\n0.00", {font: "32px LatoMediumBold32", align: "center"});
     sprites.sphere0text.anchor.set(0.5, 0.5);
     sprites.sphere0text.x = 0;
     sprites.sphere0text.y = 0;
@@ -170,7 +170,7 @@ function title_text_clicked() {
     sprites.sphere1.x = GAME_WIDTH * 0.7;
     sprites.sphere1.y = GAME_HEIGHT * 0.9;
 
-    sprites.sphere1text = new PIXI.extras.BitmapText("Lvl\n0.00", {font: "16px LatoMediumBold32", align: "center"});
+    sprites.sphere1text = new PIXI.extras.BitmapText("Lvl\n0.00", {font: "32px LatoMediumBold32", align: "center"});
     sprites.sphere1text.anchor.set(0.5, 0.5);
     sprites.sphere1text.x = 0;
     sprites.sphere1text.y = 0;
@@ -181,7 +181,7 @@ function title_text_clicked() {
     sprites.sphere2.x = GAME_WIDTH * 0.5;
     sprites.sphere2.y = GAME_HEIGHT * 0.9;
 
-    sprites.sphere2text = new PIXI.extras.BitmapText("Lvl\n0.00", {font: "16px LatoMediumBold32", align: "center"});
+    sprites.sphere2text = new PIXI.extras.BitmapText("Lvl\n0.00", {font: "32px LatoMediumBold32", align: "center"});
     sprites.sphere2text.anchor.set(0.5, 0.5);
     sprites.sphere2text.x = 0;
     sprites.sphere2text.y = 0;
@@ -253,7 +253,7 @@ function getSphereSprite(spritename) {
     var texture = TextureCache[spritename + "sphere.png"];
 
     var sprite = new Sprite(texture);
-    sprite.scale.set(1.0, 1.0)
+    sprite.scale.set(0.5, 0.5)
     sprite.anchor.set(0.5, 0.5);
     return sprite;
 }
@@ -262,8 +262,8 @@ function mage_clicked() {
     var i;
     for (i=0; i < EARN_SPEED; i++) {
         game.mana0 += game.mage_power_mana0 ;
-        game.mana1 += game.mage_power_mana1 + parseFloat(game.lvmana0 / 25) ;
-        game.mana2 += game.mage_power_mana2 + parseFloat(game.lvmana1 / 5) ;
+        game.mana1 += game.mage_power_mana1 + parseFloat(game.lvmana0 / 50) ;
+        game.mana2 += game.mage_power_mana2 + parseFloat(game.lvmana1 / 15) ;
     }
     update_mana_levels();
 
@@ -273,8 +273,8 @@ function play_game() {
     var i;
     for (i=0; i < EARN_SPEED; i++) {
         game.mana0 += parseFloat(game.lvmana0) / 100.0;
-        game.mana1 += parseFloat(game.lvmana1) / 100.0 + parseFloat(game.lvmana0) / 1500.0;
-        game.mana2 += parseFloat(game.lvmana2) / 100.0 + parseFloat(game.lvmana1) / 1500.0;
+        game.mana1 += parseFloat(game.lvmana1) / 100.0 + parseFloat(game.lvmana0) / 5000.0;
+        game.mana2 += parseFloat(game.lvmana2) / 100.0 + parseFloat(game.lvmana1) / 5000.0;
     }
     update_mana_levels();
 

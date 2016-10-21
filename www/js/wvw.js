@@ -76,7 +76,7 @@ loader
     "img/button1.png",
 
     "img/creatures.json",
-    "img/magic_spheres_lq.json",
+    "img/magic_spheres.json",
     "img/background1.jpg",
 
     "fnt/LatoMediumBold24.fnt",
@@ -338,7 +338,7 @@ function getSphereSprite(spritename) {
     var texture = TextureCache[spritename + "sphere.png"];
 
     var sprite = new Sprite(texture);
-    sprite.scale.set(1.0, 1.0)
+    sprite.scale.set(0.5, 0.5)
     sprite.anchor.set(0.5, 0.5);
     return sprite;
 }
